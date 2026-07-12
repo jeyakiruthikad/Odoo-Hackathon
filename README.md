@@ -1,348 +1,76 @@
-# 🚚 TransitOps - Smart Transport Operation System
+# TransitOps Backend API
 
-> **Developed for the Odoo Hackathon**
+Node.js + Express + MongoDB backend for the TransitOps Smart Transport Operations Platform.
 
-TransitOps is a web-based Fleet & Transportation Management System designed to streamline fleet operations. It enables organizations to efficiently manage vehicles, drivers, trips, maintenance, fuel logs, and expenses through a centralized and user-friendly dashboard.
-
----
-
-# 📖 Project Overview
-
-Managing transportation manually often leads to scheduling conflicts, maintenance delays, inaccurate records, and increased operational costs.
-
-TransitOps provides a centralized solution to:
-
-- Manage vehicles and drivers
-- Schedule and monitor trips
-- Track maintenance activities
-- Record fuel usage and operational expenses
-- Improve fleet utilization
-- Enforce business rules for reliable operations
-
----
-
-# ✨ Features
-
-## 🔐 Authentication
-- Secure JWT-based login
-- Protected API routes
-- Role-based access
-
-## 🚛 Vehicle Management
-- Register vehicles
-- Edit vehicle details
-- Delete vehicles
-- Search vehicles
-- Track vehicle availability
-
-## 👨‍✈️ Driver Management
-- Add and update drivers
-- Monitor driver availability
-- Assign drivers to trips
-
-## 📦 Trip Management
-- Create trip requests
-- Dispatch trips
-- Complete trips
-- Cancel trips
-
-## 🔧 Maintenance Management
-- Schedule maintenance
-- Close maintenance records
-- Automatically update vehicle status
-
-## ⛽ Fuel Management
-- Record fuel consumption
-- Maintain fuel history
-
-## 💰 Expense Management
-- Track operational expenses
-- Maintain expense records
-
-## 📊 Dashboard
-- Fleet overview
-- Vehicle availability
-- Driver availability
-- Active trips
-- Maintenance summary
-
----
-
-# 🛠 Technology Stack
-
-## Frontend
-- React.js
-- Vite
-- Tailwind CSS
-- Axios
-- React Context API
-
-## Backend
-- Node.js
-- Express.js
-
-## Database
-- MongoDB
-- Mongoose
-
-## Authentication
-- JWT (JSON Web Token)
-- bcrypt
-
-## Development Tools
-- Git
-- GitHub
-- Postman
-- MongoDB Compass
-- Visual Studio Code
-
----
-
-# 🏗 System Architecture
-
-```
-React Frontend
-       │
-       ▼
-     Axios
-       │
-       ▼
-Express REST API
-       │
-       ▼
-MongoDB Database
-```
-
----
-
-# 📁 Project Structure
-
-```
-TransitOps
-│
-├── transitops-frontend
-│   ├── src
-│   │   ├── components
-│   │   ├── context
-│   │   ├── pages
-│   │   ├── services
-│   │   ├── utils
-│   │   └── App.jsx
-│   └── package.json
-│
-├── transitops-backend
-│   ├── config
-│   ├── controllers
-│   ├── middleware
-│   ├── models
-│   ├── routes
-│   ├── server.js
-│   └── package.json
-│
-└── README.md
-```
-
----
-
-# 🚀 Getting Started
-
-## Prerequisites
-
-Make sure the following are installed:
-
-- Node.js (v18 or later)
-- npm
-- MongoDB Community Server
-- Git
-- Visual Studio Code (Recommended)
-
-Check your installation:
-
-```bash
-node -v
-npm -v
-git --version
-```
-
----
-
-## 1️⃣ Clone the Repository
-
-```bash
-git clone https://github.com/jeyakiruthikad/Odoo-Hackathon.git
-
-cd Odoo-Hackathon
-```
-
----
-
-## 2️⃣ Backend Setup
-
-Navigate to the backend folder:
+## Setup
 
 ```bash
 cd transitops-backend
-```
-
-Install dependencies:
-
-```bash
 npm install
+cp .env.example .env      # then edit JWT_SECRET etc.
+# make sure a local MongoDB Community Server is running on MONGO_URI
+npm run seed               # optional: creates demo users/vehicles/drivers
+npm run dev                 # starts on http://localhost:5000 (nodemon)
 ```
 
-### Create a `.env` file
+Demo login after seeding (password for all: `password123`):
+- fleet@transitops.dev — fleet_manager
+- driver@transitops.dev — driver
+- safety@transitops.dev — safety_officer
+- finance@transitops.dev — financial_analyst
 
-```env
-PORT=5000
-MONGO_URI=your_mongodb_connection_string
-JWT_SECRET=your_secret_key
+## Auth
+
+All routes except `/api/auth/register` and `/api/auth/login` require:
 ```
-
-> Replace the placeholder values with your own local configuration. Do not commit your actual `.env` file to GitHub.
-
-Start the backend server:
-
-```bash
-npm run dev
+Authorization: Bearer <token>
 ```
+`token` comes back from register/login. Roles: `fleet_manager`, `driver`, `safety_officer`, `financial_analyst`.
 
-You should see:
+## Endpoints
 
-```
-MongoDB Connected
-Server running on port 5000
-```
+| Method | Path | Roles | Notes |
+|---|---|---|---|
+| POST | /api/auth/register | Public | |
+| POST | /api/auth/login | Public | |
+| GET | /api/auth/me | any | |
+| GET | /api/vehicles | any | `?status=&type=&region=&dispatchable=true` |
+| POST/PUT/DELETE | /api/vehicles(/:id) | fleet_manager | |
+| GET | /api/drivers | any | `?status=&assignable=true` |
+| POST/PUT | /api/drivers(/:id) | fleet_manager, safety_officer | |
+| DELETE | /api/drivers/:id | fleet_manager | |
+| GET | /api/trips | any | `?status=&vehicle=&driver=` |
+| POST/PUT | /api/trips(/:id) | fleet_manager, driver | create/edit while Draft |
+| POST | /api/trips/:id/dispatch | fleet_manager, driver | Draft → Dispatched |
+| POST | /api/trips/:id/complete | fleet_manager, driver | Dispatched → Completed |
+| POST | /api/trips/:id/cancel | fleet_manager, driver | Draft/Dispatched → Cancelled |
+| GET/POST | /api/maintenance | fleet_manager (write) | creating sets vehicle to In Shop |
+| PUT | /api/maintenance/:id/close | fleet_manager | restores vehicle unless Retired |
+| GET/POST | /api/fuel | fleet_manager, driver, financial_analyst (write) | |
+| GET/POST | /api/expenses | fleet_manager, financial_analyst (write) | |
+| GET | /api/dashboard | any | KPIs + recent activity, `?type=&region=` |
+| GET | /api/reports/fleet | fleet_manager, financial_analyst, safety_officer | fuel efficiency, utilization, cost, ROI per vehicle |
+| GET | /api/reports/fleet/export | fleet_manager, financial_analyst | same report as CSV download |
 
----
+## Business rules enforced (see controllers for exact locations)
 
-## 3️⃣ Frontend Setup
+- Vehicle registration number & driver license number are unique.
+- Retired/In Shop vehicles are excluded from `dispatchable=true` and blocked at `/dispatch`.
+- Expired-license or Suspended drivers are excluded from `assignable=true` and blocked at `/dispatch`.
+- A vehicle/driver already `On Trip` cannot be dispatched again.
+- Cargo weight can't exceed vehicle max load capacity (checked at create, edit, and dispatch).
+- Dispatch → vehicle & driver become `On Trip`. Complete/cancel-a-dispatched-trip → both back to `Available`.
+- Creating a maintenance log → vehicle becomes `In Shop`; closing it → back to `Available` unless `Retired`.
 
-Open a new terminal.
+## Notes / assumptions
 
-Navigate to the frontend folder:
-
-```bash
-cd transitops-frontend
-```
-
-Install dependencies:
-
-```bash
-npm install
-```
-
-### Create a `.env` file
-
-```env
-VITE_API_BASE_URL=http://localhost:5000/api
-```
-
-Start the frontend:
-
-```bash
-npm run dev
-```
-
-Open your browser and visit:
-
-```
-http://localhost:5173
-```
-
----
-
-## 4️⃣ Running the Application
-
-Start both servers.
-
-### Backend
-
-```bash
-cd transitops-backend
-npm run dev
-```
-
-### Frontend
-
-```bash
-cd transitops-frontend
-npm run dev
-```
-
-The application will be available at:
-
-```
-http://localhost:5173
-```
-
----
-
-# 📡 API Endpoints
-
-| Module | Endpoint |
-|---------|----------|
-| Authentication | `/api/auth/login` |
-| Vehicles | `/api/vehicles` |
-| Drivers | `/api/drivers` |
-| Trips | `/api/trips` |
-| Maintenance | `/api/maintenance` |
-| Fuel Logs | `/api/fuel` |
-| Expenses | `/api/expenses` |
-
----
-
-# ✅ Business Rules
-
-- Vehicle registration numbers must be unique.
-- A vehicle cannot be assigned to multiple active trips.
-- A driver cannot be assigned to multiple active trips.
-- Cargo weight cannot exceed vehicle capacity.
-- Vehicle status updates automatically during trips and maintenance.
-- Driver status updates automatically after trip completion.
-- Protected routes require JWT authentication.
-
----
-
-# 🧪 Testing
-
-The application was tested using:
-
-- Postman
-- MongoDB Compass
-- Browser testing
-- CRUD operation testing
-- Business rule validation
-- Responsive UI testing
-
----
-
-# 🔮 Future Enhancements
-
-- GPS-based live vehicle tracking
-- Route optimization
-- Predictive maintenance
-- Fuel analytics dashboard
-- Driver performance reports
-- Export reports to PDF/Excel
-- Email and SMS notifications
-
----
-
-# 👥 Team
-
-| Member | Responsibility |
-|---------|----------------|
-| Jeya Kiruthika D| Frontend Development |
-| Jeya Keerthana D | Backend Development & Database |
-
----
-
-# 📄 License
-
-This project was developed for the **Odoo Hackathon** and is intended for educational and demonstration purposes.
-
----
-
-# 🙏 Acknowledgements
-
-We thank the **Odoo Hackathon** organizers for providing the opportunity to build an innovative fleet management solution.
+- **No Mongo transactions**: a local standalone `mongod` doesn't support multi-document
+  transactions (that needs a replica set), so trip dispatch/complete/cancel use a
+  validate-then-write pattern instead of `session.withTransaction`. If you move to Atlas
+  or a replica set, this is a good spot to reintroduce sessions for stronger atomicity.
+- **Vehicle ROI** `(Revenue - (Maintenance + Fuel)) / Acquisition Cost` needs a revenue
+  figure that the original spec never defines a source for. Added an optional `revenue`
+  field, settable when completing a trip (`POST /api/trips/:id/complete`), so the report
+  has something to compute against. Defaults to 0 if never supplied.
+- Fuel Efficiency and ROI in `/api/reports/fleet` are computed cumulatively per vehicle
+  across all completed trips/logs, not per single trip.

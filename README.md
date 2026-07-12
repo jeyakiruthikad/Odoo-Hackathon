@@ -1,51 +1,348 @@
-# TransitOps — Frontend
+# 🚚 TransitOps - Smart Transport Operation System
 
-Smart Transport Operations Platform. React (Vite) + Tailwind CSS frontend for the TransitOps hackathon brief.
+> **Developed for the Odoo Hackathon**
 
-This build is fully demoable **without a backend**: `DataContext` holds the fleet data in memory and persists it to `localStorage`, and every business rule from the spec (unique registration numbers, dispatch eligibility, cargo-weight limits, automatic status transitions) is enforced client-side. When the Express + MongoDB API is ready, wire `src/services/api.js` into `DataContext` and swap local state updates for API calls.
+TransitOps is a web-based Fleet & Transportation Management System designed to streamline fleet operations. It enables organizations to efficiently manage vehicles, drivers, trips, maintenance, fuel logs, and expenses through a centralized and user-friendly dashboard.
 
-## Getting started
+---
+
+# 📖 Project Overview
+
+Managing transportation manually often leads to scheduling conflicts, maintenance delays, inaccurate records, and increased operational costs.
+
+TransitOps provides a centralized solution to:
+
+- Manage vehicles and drivers
+- Schedule and monitor trips
+- Track maintenance activities
+- Record fuel usage and operational expenses
+- Improve fleet utilization
+- Enforce business rules for reliable operations
+
+---
+
+# ✨ Features
+
+## 🔐 Authentication
+- Secure JWT-based login
+- Protected API routes
+- Role-based access
+
+## 🚛 Vehicle Management
+- Register vehicles
+- Edit vehicle details
+- Delete vehicles
+- Search vehicles
+- Track vehicle availability
+
+## 👨‍✈️ Driver Management
+- Add and update drivers
+- Monitor driver availability
+- Assign drivers to trips
+
+## 📦 Trip Management
+- Create trip requests
+- Dispatch trips
+- Complete trips
+- Cancel trips
+
+## 🔧 Maintenance Management
+- Schedule maintenance
+- Close maintenance records
+- Automatically update vehicle status
+
+## ⛽ Fuel Management
+- Record fuel consumption
+- Maintain fuel history
+
+## 💰 Expense Management
+- Track operational expenses
+- Maintain expense records
+
+## 📊 Dashboard
+- Fleet overview
+- Vehicle availability
+- Driver availability
+- Active trips
+- Maintenance summary
+
+---
+
+# 🛠 Technology Stack
+
+## Frontend
+- React.js
+- Vite
+- Tailwind CSS
+- Axios
+- React Context API
+
+## Backend
+- Node.js
+- Express.js
+
+## Database
+- MongoDB
+- Mongoose
+
+## Authentication
+- JWT (JSON Web Token)
+- bcrypt
+
+## Development Tools
+- Git
+- GitHub
+- Postman
+- MongoDB Compass
+- Visual Studio Code
+
+---
+
+# 🏗 System Architecture
+
+```
+React Frontend
+       │
+       ▼
+     Axios
+       │
+       ▼
+Express REST API
+       │
+       ▼
+MongoDB Database
+```
+
+---
+
+# 📁 Project Structure
+
+```
+TransitOps
+│
+├── transitops-frontend
+│   ├── src
+│   │   ├── components
+│   │   ├── context
+│   │   ├── pages
+│   │   ├── services
+│   │   ├── utils
+│   │   └── App.jsx
+│   └── package.json
+│
+├── transitops-backend
+│   ├── config
+│   ├── controllers
+│   ├── middleware
+│   ├── models
+│   ├── routes
+│   ├── server.js
+│   └── package.json
+│
+└── README.md
+```
+
+---
+
+# 🚀 Getting Started
+
+## Prerequisites
+
+Make sure the following are installed:
+
+- Node.js (v18 or later)
+- npm
+- MongoDB Community Server
+- Git
+- Visual Studio Code (Recommended)
+
+Check your installation:
+
+```bash
+node -v
+npm -v
+git --version
+```
+
+---
+
+## 1️⃣ Clone the Repository
+
+```bash
+git clone https://github.com/jeyakiruthikad/Odoo-Hackathon.git
+
+cd Odoo-Hackathon
+```
+
+---
+
+## 2️⃣ Backend Setup
+
+Navigate to the backend folder:
+
+```bash
+cd transitops-backend
+```
+
+Install dependencies:
 
 ```bash
 npm install
+```
+
+### Create a `.env` file
+
+```env
+PORT=5000
+MONGO_URI=your_mongodb_connection_string
+JWT_SECRET=your_secret_key
+```
+
+> Replace the placeholder values with your own local configuration. Do not commit your actual `.env` file to GitHub.
+
+Start the backend server:
+
+```bash
 npm run dev
 ```
 
-Open http://localhost:5173.
+You should see:
 
-## Demo logins
+```
+MongoDB Connected
+Server running on port 5000
+```
 
-Password for all demo accounts: `demo1234`
+---
 
-| Role | Email |
-|---|---|
-| Fleet Manager | fleet@transitops.io |
-| Driver | driver@transitops.io |
-| Safety Officer | safety@transitops.io |
-| Financial Analyst | finance@transitops.io |
+## 3️⃣ Frontend Setup
 
-The login screen has one-click buttons that fill these in for you.
+Open a new terminal.
 
-## What's implemented
+Navigate to the frontend folder:
 
-- **Auth + RBAC** — login gate, role-based write permissions per module (see `PERMISSIONS` in `AuthContext.jsx`)
-- **Dashboard** — live KPIs (active/available/in-maintenance vehicles, active/pending trips, drivers on duty, fleet utilization %), filters by type/region/status, status + lifecycle charts, recent activity feed
-- **Vehicle Registry** — CRUD, unique registration number enforcement, status badges
-- **Driver Management** — CRUD, license expiry flagging
-- **Trip Management** — create as Draft, Dispatch / Complete / Cancel with full business-rule validation, road-line lifecycle stepper
-- **Maintenance** — creating a record auto-sets the vehicle to "In Shop"; closing it restores "Available" (unless Retired)
-- **Fuel & Expenses** — logging + automatic per-vehicle operational cost (fuel + maintenance)
-- **Reports** — fuel efficiency, fleet utilization, operational cost, vehicle ROI, CSV export
-- Responsive layout down to mobile, visible keyboard focus rings, `prefers-reduced-motion` respected
+```bash
+cd transitops-frontend
+```
 
-## Design system
+Install dependencies:
 
-- **Colors**: Asphalt `#1B1D22`, Concrete `#EDEFEC`, Lane Yellow `#F5B400`, Signal Green `#1E8E5A`, Steel Blue `#3E5C88`, Beacon Red `#D6493B`
-- **Type**: Oswald (display/headings), Inter (body), IBM Plex Mono (registration numbers, license numbers, odometer/data readouts)
-- **Signature element**: the road-line trip stepper on the Trips page, and traffic-light status dots used everywhere a status shows
+```bash
+npm install
+```
 
-## Connecting the real backend
+### Create a `.env` file
 
-1. Stand up the Express + MongoDB API described in the brief (`/api/vehicles`, `/api/drivers`, `/api/trips`, `/api/maintenance`, `/api/fuel`, `/api/expenses`, `/api/auth/*`).
-2. Set `VITE_API_BASE_URL` in a `.env` file.
-3. Replace the local-state mutations in `src/context/DataContext.jsx` with calls to `src/services/api.js`, keeping the same function signatures so pages don't need to change.
+```env
+VITE_API_BASE_URL=http://localhost:5000/api
+```
+
+Start the frontend:
+
+```bash
+npm run dev
+```
+
+Open your browser and visit:
+
+```
+http://localhost:5173
+```
+
+---
+
+## 4️⃣ Running the Application
+
+Start both servers.
+
+### Backend
+
+```bash
+cd transitops-backend
+npm run dev
+```
+
+### Frontend
+
+```bash
+cd transitops-frontend
+npm run dev
+```
+
+The application will be available at:
+
+```
+http://localhost:5173
+```
+
+---
+
+# 📡 API Endpoints
+
+| Module | Endpoint |
+|---------|----------|
+| Authentication | `/api/auth/login` |
+| Vehicles | `/api/vehicles` |
+| Drivers | `/api/drivers` |
+| Trips | `/api/trips` |
+| Maintenance | `/api/maintenance` |
+| Fuel Logs | `/api/fuel` |
+| Expenses | `/api/expenses` |
+
+---
+
+# ✅ Business Rules
+
+- Vehicle registration numbers must be unique.
+- A vehicle cannot be assigned to multiple active trips.
+- A driver cannot be assigned to multiple active trips.
+- Cargo weight cannot exceed vehicle capacity.
+- Vehicle status updates automatically during trips and maintenance.
+- Driver status updates automatically after trip completion.
+- Protected routes require JWT authentication.
+
+---
+
+# 🧪 Testing
+
+The application was tested using:
+
+- Postman
+- MongoDB Compass
+- Browser testing
+- CRUD operation testing
+- Business rule validation
+- Responsive UI testing
+
+---
+
+# 🔮 Future Enhancements
+
+- GPS-based live vehicle tracking
+- Route optimization
+- Predictive maintenance
+- Fuel analytics dashboard
+- Driver performance reports
+- Export reports to PDF/Excel
+- Email and SMS notifications
+
+---
+
+# 👥 Team
+
+| Member | Responsibility |
+|---------|----------------|
+| Jeya Kiruthika D| Frontend Development |
+| Jeya Keerthana D | Backend Development & Database |
+
+---
+
+# 📄 License
+
+This project was developed for the **Odoo Hackathon** and is intended for educational and demonstration purposes.
+
+---
+
+# 🙏 Acknowledgements
+
+We thank the **Odoo Hackathon** organizers for providing the opportunity to build an innovative fleet management solution.
